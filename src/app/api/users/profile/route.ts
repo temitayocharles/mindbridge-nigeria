@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/database';
 import { getToken } from 'next-auth/jwt';
-import bcrypt from 'bcryptjs';
+// import bcrypt from 'bcryptjs'; // TODO: Enable when password update is implemented
 import { z } from 'zod';
 
 // Input validation schemas
-const getUserSchema = z.object({
-    id: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid user ID format'),
-});
+// const getUserSchema = z.object({ // TODO: Enable when needed
+//     id: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid user ID format'),
+// });
 
 const updateUserSchema = z.object({
     name: z.string().min(1).max(100).optional(),
@@ -16,11 +16,13 @@ const updateUserSchema = z.object({
 });
 
 // Sanitize input to prevent injection attacks
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function sanitizeInput(input: any): any {
     if (typeof input === 'string') {
         return input.replace(/[<>'"\\;]/g, '').trim();
     }
     if (typeof input === 'object' && input !== null) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const sanitized: any = {};
         for (const [key, value] of Object.entries(input)) {
             sanitized[sanitizeInput(key)] = sanitizeInput(value);
@@ -80,7 +82,7 @@ export async function GET(request: NextRequest) {
         const { db } = await connectToDatabase();
 
         // Use ObjectId to prevent injection
-        const { ObjectId } = require('mongodb');
+        const ObjectId = require('mongodb').ObjectId;
         const user = await db.collection('users').findOne(
             { _id: new ObjectId(token.sub) },
             { projection: { password: 0, hashedPassword: 0 } }
@@ -152,7 +154,7 @@ export async function PUT(request: NextRequest) {
         const { db } = await connectToDatabase();
 
         // Use ObjectId to prevent injection
-        const { ObjectId } = require('mongodb');
+        const ObjectId = require('mongodb').ObjectId;
         const result = await db.collection('users').updateOne(
             { _id: new ObjectId(token.sub) },
             { $set: updateData }

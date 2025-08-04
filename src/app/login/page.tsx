@@ -31,7 +31,7 @@ export default function LoginPage() {
                     router.push('/dashboard');
                 }
             }
-        } catch (error) {
+        } catch {
             toast.error('Login failed');
         } finally {
             setIsLoading(false);
@@ -99,7 +99,7 @@ export default function LoginPage() {
 
                     <div className="text-center">
                         <a href="/register" className="text-sm text-indigo-600 hover:text-indigo-500">
-                            Don't have an account? Sign up
+                            Don&apos;t have an account? Sign up
                         </a>
                     </div>
                 </form>

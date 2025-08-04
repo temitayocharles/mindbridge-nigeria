@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
         let body;
         try {
             body = await request.json();
-        } catch (error) {
+        } catch {
             return NextResponse.json(
                 { error: 'Bad Request', message: 'Invalid JSON format' },
                 { status: 400 }
@@ -186,7 +186,7 @@ export async function POST(request: NextRequest) {
         });
 
         // Return success response (without password)
-        const { hashedPassword: _, ...userResponse } = userData;
+        const { hashedPassword: _hashedPassword, ...userResponse } = userData;
 
         return NextResponse.json(
             {

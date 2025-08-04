@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Brain, User, UserCheck, Mail, Lock, MapPin, Phone } from 'lucide-react'
+import { Brain, User, UserCheck, Mail, Lock, Phone } from 'lucide-react'
+// import { MapPin } from 'lucide-react' // TODO: Enable when location feature is implemented
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
@@ -70,7 +71,7 @@ export default function RegisterPage() {
                             }`}
                     >
                         <UserCheck className="w-5 h-5" />
-                        <span>I'm a therapist</span>
+                        <span>I&apos;m a therapist</span>
                     </button>
                 </div>
 

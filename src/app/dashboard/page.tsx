@@ -82,7 +82,7 @@ export default function Dashboard() {
                         <div className="space-y-6 lg:space-y-8">
                             <div>
                                 <h1 className="text-2xl lg:text-3xl font-bold mb-2">Welcome back, Sarah!</h1>
-                                <p className="text-gray-300 text-sm lg:text-base">Here's your mental health journey overview</p>
+                                <p className="text-gray-300 text-sm lg:text-base">Here&apos;s your mental health journey overview</p>
                             </div>
 
                             {/* Stats Cards */}

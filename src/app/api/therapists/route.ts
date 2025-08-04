@@ -100,7 +100,7 @@ export async function GET(request: NextRequest) {
         const search = searchParams.get('search')
         const lat = searchParams.get('lat')
         const lng = searchParams.get('lng')
-        const radius = parseInt(searchParams.get('radius') || '50') // km
+        const _radius = parseInt(searchParams.get('radius') || '50') // km - for future geo search
 
         let filteredTherapists = mockTherapists
 

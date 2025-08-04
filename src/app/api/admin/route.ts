@@ -189,7 +189,7 @@ export async function POST(request: NextRequest) {
 
         // Connect to database
         const { db } = await connectToDatabase();
-        const { ObjectId } = require('mongodb');
+        const ObjectId = require('mongodb').ObjectId;
 
         switch (validation.data.action) {
             case 'verify_therapist':

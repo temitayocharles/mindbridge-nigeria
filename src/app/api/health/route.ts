@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { checkDatabaseHealth } from '@/lib/database'
 
 // Cache health check results for better performance
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let cachedHealthResult: any = null
 let lastHealthCheck = 0
 const CACHE_DURATION = 30000 // 30 seconds cache

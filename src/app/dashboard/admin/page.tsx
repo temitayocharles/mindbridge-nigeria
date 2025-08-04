@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server';
+// import { NextRequest } from 'next/server'; // TODO: Enable when needed
 import { redirect } from 'next/navigation';
 
 export default function AdminDashboard() {
