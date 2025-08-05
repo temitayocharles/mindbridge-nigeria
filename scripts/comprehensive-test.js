@@ -45,7 +45,7 @@ class ComprehensiveTestSuite {
             if (response.statusCode === 200) {
                 this.log('Rate limiter reset successfully', 'info');
             }
-        } catch (error) {
+        } catch (_error) {
             this.log('Failed to reset rate limiter (continuing anyway)', 'warning');
         }
     }
