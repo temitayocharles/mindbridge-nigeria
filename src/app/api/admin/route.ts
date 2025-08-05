@@ -257,7 +257,7 @@ export async function POST(request: NextRequest) {
                     action: 'delete_user',
                     targetUserId: validation.data.userId,
                     timestamp: new Date(),
-                    ipAddress: request.headers.get('x-forwarded-for') || request.ip
+                    ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'anonymous'
                 });
 
                 return NextResponse.json({

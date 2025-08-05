@@ -73,8 +73,8 @@ class RateLimiter {
     let ip = forwarded?.split(',')[0] || realIp || cfConnectingIp;
     
     if (!ip) {
-      // Fallback to connection remote address or default
-      ip = request.ip || 'unknown';
+      // Fallback to default IP
+      ip = 'unknown';
     }
     
     return ip.trim();
