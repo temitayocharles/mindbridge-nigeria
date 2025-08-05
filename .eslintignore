@@ -1,0 +1,8 @@
+# ESLint ignore patterns
+.next/
+node_modules/
+dist/
+build/
+*.d.ts
+coverage/
+.env*

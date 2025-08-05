@@ -67,7 +67,7 @@ const nextConfig = {
   },
 
   // Webpack configuration
-  webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
+  webpack: (config, { _buildId, dev, isServer, _defaultLoaders, _webpack }) => {
     // Production optimizations
     if (!dev && !isServer) {
       config.optimization.splitChunks = {

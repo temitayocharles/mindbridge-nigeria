@@ -63,7 +63,7 @@ if (db.getName() === 'mindbridge-nigeria') {
     print('Inserting sample data...');
 
     // Sample Nigerian states
-    const nigerianStates = [
+    const _nigerianStates = [
         'Lagos', 'Kano', 'Rivers', 'Oyo', 'Kaduna', 'Anambra', 'Plateau', 'Enugu',
         'Abia', 'Adamawa', 'Akwa Ibom', 'Bauchi', 'Bayelsa', 'Benue', 'Borno',
         'Cross River', 'Delta', 'Ebonyi', 'Edo', 'Ekiti', 'FCT - Abuja', 'Gombe',

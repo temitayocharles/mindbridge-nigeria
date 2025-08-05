@@ -32,7 +32,7 @@ let cachedHealthResult: CachedHealthResult | null = null
 let lastHealthCheck = 0
 const CACHE_DURATION = 30000 // 30 seconds cache
 
-async function healthHandler(request: NextRequest): Promise<NextResponse> {
+async function healthHandler(_request: NextRequest): Promise<NextResponse> {
     const startTime = Date.now()
 
     try {

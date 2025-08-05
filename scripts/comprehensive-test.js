@@ -421,7 +421,7 @@ class ComprehensiveTestSuite {
 
         // Test 3: Timeout Handling
         try {
-            const response = await this.makeRequest('/api/health', { timeout: 1 }); // Very short timeout
+            const _response = await this.makeRequest('/api/health', { timeout: 1 }); // Very short timeout
             this.recordTest('Timeout Handling', false, 'Should have timed out');
         } catch (error) {
             const timedOut = error.error === 'Request timeout';

@@ -7,7 +7,7 @@
 
 const http = require('http');
 const fs = require('fs');
-const crypto = require('crypto');
+const _crypto = require('crypto');
 
 class SecurityTester {
     constructor(baseUrl = 'http://localhost:3000') {

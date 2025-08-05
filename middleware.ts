@@ -171,7 +171,7 @@ export async function middleware(request: NextRequest) {
         /(<script|javascript:|vbscript:|onload=|onerror=)/i
     ];
 
-    for (const [key, value] of searchParams.entries()) {
+    for (const [_key, value] of searchParams.entries()) {
         for (const pattern of suspiciousPatterns) {
             if (pattern.test(value)) {
                 return new NextResponse(
