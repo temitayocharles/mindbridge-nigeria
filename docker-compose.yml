@@ -1,0 +1,152 @@
+# Production-Grade Docker Compose for MindBridge Nigeria
+version: '3.8'
+
+services:
+  # ======================== MindBridge App ========================
+  mindbridge-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner
+      cache_from:
+        - mindbridge-nigeria:latest
+    image: mindbridge-nigeria:latest
+    container_name: mindbridge-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+      - NEXT_TELEMETRY_DISABLED=1
+      - MONGODB_URI=mongodb://admin:${MONGO_ROOT_PASSWORD:-secure_password_123}@mongodb:27017/mindbridge?authSource=admin
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-redis_password_123}@redis:6379
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - mindbridge-network
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+
+  # ======================== MongoDB Database ========================
+  mongodb:
+    image: mongo:7-jammy
+    container_name: mindbridge-mongodb
+    restart: unless-stopped
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD:-secure_password_123}
+      - MONGO_INITDB_DATABASE=mindbridge
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./scripts/mongodb-init.js:/docker-entrypoint-initdb.d/init.js:ro
+    networks:
+      - mindbridge-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '0.5'
+        reservations:
+          memory: 512M
+          cpus: '0.25'
+
+  # ======================== Redis Cache ========================
+  redis:
+    image: redis:7-alpine
+    container_name: mindbridge-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - mindbridge-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis_password_123}
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.25'
+        reservations:
+          memory: 128M
+          cpus: '0.1'
+
+  # ======================== Nginx Reverse Proxy ========================
+  nginx:
+    image: nginx:alpine
+    container_name: mindbridge-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - nginx_logs:/var/log/nginx
+    networks:
+      - mindbridge-network
+    depends_on:
+      - mindbridge-app
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.25'
+        reservations:
+          memory: 64M
+          cpus: '0.1'
+
+# ======================== Networks ========================
+networks:
+  mindbridge-network:
+    driver: bridge
+    name: mindbridge-network
+
+# ======================== Volumes ========================
+volumes:
+  mongodb_data:
+    driver: local
+    name: mindbridge-mongodb-data
+  redis_data:
+    driver: local
+    name: mindbridge-redis-data
+  nginx_logs:
+    driver: local
+    name: mindbridge-nginx-logs

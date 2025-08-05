@@ -66,15 +66,65 @@ export async function disconnectFromDatabase() {
 }
 
 // Health check function
-export async function checkDatabaseHealth(): Promise<boolean> {
-    try {
-        const { client } = await connectToDatabase()
-        await client.db('admin').command({ ping: 1 })
-        return true
-    } catch (error) {
-        console.error('Database health check failed:', error)
-        return false
-    }
+export async function checkDatabaseHealth(): Promise<{
+  status: 'healthy' | 'unhealthy' | 'degraded';
+  responseTime: number;
+  error?: string;
+}> {
+  const startTime = Date.now();
+  
+  try {
+    // Set a reasonable timeout for health checks (2 seconds)
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Database check timeout')), 2000);
+    });
+    
+    const healthCheckPromise = (async () => {
+      const { client } = await connectToDatabase();
+      await client.db('admin').command({ ping: 1 });
+    })();
+    
+    await Promise.race([healthCheckPromise, timeoutPromise]);
+    
+    const responseTime = Date.now() - startTime;
+    return {
+      status: 'healthy',
+      responseTime
+    };
+  } catch (error) {
+    const responseTime = Date.now() - startTime;
+    console.error('Database health check failed:', error);
+    
+    // Determine if this is a timeout or connection error
+    const isTimeoutError = error instanceof Error && error.message.includes('timeout');
+    const isConnectionError = error instanceof Error && 
+      (error.message.includes('ECONNREFUSED') || error.message.includes('connect'));
+    
+    return {
+      status: isTimeoutError || isConnectionError ? 'degraded' : 'unhealthy',
+      responseTime,
+      error: error instanceof Error ? error.message : 'Unknown database error'
+    };
+  }
+}
+
+// Graceful database operations with fallback
+export async function safeDbOperation<T>(
+  operation: () => Promise<T>,
+  fallback: T,
+  operationName: string = 'database operation'
+): Promise<{ success: boolean; data: T; error?: string }> {
+  try {
+    const data = await operation();
+    return { success: true, data };
+  } catch (error) {
+    console.warn(`${operationName} failed, using fallback:`, error);
+    return { 
+      success: false, 
+      data: fallback, 
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
 }
 
 // Database schemas and collections

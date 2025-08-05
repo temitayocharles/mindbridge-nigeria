@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withRateLimit } from '@/lib/rate-limiter'
+import { safeDbOperation } from '@/lib/database'
 
 // Mock therapist data for Nigeria
 const mockTherapists = [
@@ -92,7 +94,7 @@ const mockTherapists = [
     }
 ]
 
-export async function GET(request: NextRequest) {
+async function therapistsHandler(request: NextRequest): Promise<NextResponse> {
     try {
         const searchParams = request.nextUrl.searchParams
         const state = searchParams.get('state')
@@ -102,7 +104,27 @@ export async function GET(request: NextRequest) {
         const lng = searchParams.get('lng')
         const _radius = parseInt(searchParams.get('radius') || '50') // km - for future geo search
 
-        let filteredTherapists = mockTherapists
+        // Use safe database operation with fallback to mock data
+        const dbResult = await safeDbOperation(
+            async () => {
+                // In future: fetch from actual database
+                // const { db } = await connectToDatabase()
+                // return await db.collection('therapists').find(query).toArray()
+                return mockTherapists
+            },
+            mockTherapists,
+            'fetch therapists'
+        )
+
+        let filteredTherapists = dbResult.data
+
+        // Input validation and sanitization
+        if (search && search.length > 100) {
+            return NextResponse.json(
+                { error: 'Search query too long' }, 
+                { status: 400 }
+            )
+        }
 
         // Filter by state
         if (state) {
@@ -116,11 +138,12 @@ export async function GET(request: NextRequest) {
             )
         }
 
-        // Search by name or bio
+        // Search by name or bio (with basic sanitization)
         if (search) {
+            const sanitizedSearch = search.replace(/[^\w\s]/gi, '').toLowerCase()
             filteredTherapists = filteredTherapists.filter(t =>
-                t.name.toLowerCase().includes(search.toLowerCase()) ||
-                t.bio.toLowerCase().includes(search.toLowerCase())
+                t.name.toLowerCase().includes(sanitizedSearch) ||
+                t.bio.toLowerCase().includes(sanitizedSearch)
             )
         }
 
@@ -133,13 +156,40 @@ export async function GET(request: NextRequest) {
         // Sort by rating (highest first)
         filteredTherapists.sort((a, b) => b.rating - a.rating)
 
-        return NextResponse.json({
+        const response = {
             therapists: filteredTherapists,
-            total: filteredTherapists.length
+            total: filteredTherapists.length,
+            success: dbResult.success,
+            ...(dbResult.error && { warning: 'Using cached data due to database issues' })
+        }
+
+        return NextResponse.json(response, {
+            headers: {
+                'Cache-Control': dbResult.success ? 'public, max-age=300' : 'no-cache'
+            }
         })
 
     } catch (error) {
         console.error('Therapists fetch error:', error)
-        return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+        
+        // Graceful degradation - return basic mock data
+        return NextResponse.json({
+            therapists: mockTherapists.slice(0, 5), // Return first 5 as fallback
+            total: 5,
+            success: false,
+            error: 'Service temporarily unavailable, showing limited results'
+        }, { 
+            status: 200, // Still return success but with limited data
+            headers: {
+                'Cache-Control': 'no-cache'
+            }
+        })
     }
 }
+
+// Apply rate limiting: 200 requests per minute for therapist searches (test-friendly)
+export const GET = withRateLimit(therapistsHandler, {
+    limit: 200,
+    windowMs: 60000,
+    message: 'Too many therapist search requests'
+})
